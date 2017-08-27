@@ -72,7 +72,86 @@ namespace SubtitleCorrector
 
         private string correctFile(string text, double delay)
         {
-            return text;
+            string[] splitedText = text.Split(new string[] {"\n", "\r\n"}, StringSplitOptions.RemoveEmptyEntries);
+            string res = "";
+            foreach (string st in splitedText)
+            {
+                res = res + correctedLine(st, delay);
+                res = res + '\n';
+            }
+            return res;
+        }
+
+        private string correctedLine(string ln, double dl)
+        {
+            String[] splittedLine = line.split(" ");
+            string res = "";
+            for (int i = 0; i < splittedLine.length; i++) {
+                if (isDate(splittedLine[i])) {
+                    splittedLine[i] = fixedDate(splittedLine[i], dl);
+                }
+                res = res + splittedLine[i] + (i < splittedLine.length - 1 ? " " : ""));
+            }
+            return res;
+        }
+
+        private bool isDate(string dt)
+        {
+            string[] splitedDt = dt.split(":");
+            return (splitedDt.length == 3);
+        }
+
+        private string fixedDate(string dateSt, double dl)
+        {
+            String[] splitedDt = dateSt.split(":");
+
+            double date = 0;
+
+            for (int i = 0; i < splitedDt.length; i++) {
+                date = date * 60 + Double.Parse(splitedDt[i].Replace(",", "."));
+            }
+
+            date += dl;
+            if (date < 0)
+                date = 0;
+
+            for (int i = 0; i < splitedDt.length; i++) {
+                if (i == 0)
+                    splitedDt[i] = "" + formated((date % 60));
+                else
+                    splitedDt[i] = "" + formated((int) (date % 60));
+
+                date /= 60;
+            }
+            string res = "";
+            for (int i = splitedDt.length - 1; i >= 0; i--) {
+                res = res + splitedDt[i] + (i > 0 ? ":" : "");
+            }
+
+            return res;
+        }
+
+        private formated(double date) 
+        {
+            String res = "";
+
+            int integerPart = (int) date;
+
+            if (integerPart < 10)
+                res = res + "0" + integerPart;
+            else
+                res = res + integerPart;
+
+            if (integerPart != date) {
+                date -= integerPart;
+                String afterThePoint = date.ToString("0.000000");
+                afterThePoint = "," + afterThePoint.Substring(2);
+                if (afterThePoint.Length > 15)
+                    afterThePoint = afterThePoint.substring(0, 4);
+                ans = ans + afterThePoint;
+            }
+
+            return ans;
         }
     }
 }
