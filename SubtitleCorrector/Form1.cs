@@ -28,7 +28,7 @@ namespace SubtitleCorrector
             DialogResult rs = openFileDialog1.ShowDialog();
             if (rs == DialogResult.OK)
             {
-                string file = openFileDialog1.FileName;
+                String file = openFileDialog1.FileName;
                 try
                 {
                     if (fileType(file).ToLower() != "srt")
@@ -36,7 +36,7 @@ namespace SubtitleCorrector
                         MessageBox.Show(fileType(file));
                         return;
                     }
-                    string text = File.ReadAllText(file);
+                    String text = File.ReadAllText(file);
                     correctFile(text, Double.Parse(textBox1.Text));
                 }
                 catch (IOException)
@@ -44,7 +44,7 @@ namespace SubtitleCorrector
                     MessageBox.Show("Try other file");
                 }
             }
-            
+
         }
 
         private void openFileDialog1_FileOk(object sender, CancelEventArgs e)
@@ -57,9 +57,9 @@ namespace SubtitleCorrector
 
         }
 
-        private string fileType(string fileName)
+        private String fileType(String fileName)
         {
-            string res = "";
+            String res = "";
             for (int i = fileName.Length - 1; i >= 0; i--)
             {
                 if (fileName[i] == '.')
@@ -70,11 +70,11 @@ namespace SubtitleCorrector
             return res;
         }
 
-        private string correctFile(string text, double delay)
+        private String correctFile(String text, double delay)
         {
-            string[] splitedText = text.Split(new string[] {"\n", "\r\n"}, StringSplitOptions.RemoveEmptyEntries);
-            string res = "";
-            foreach (string st in splitedText)
+            String[] splitedText = text.Split(new String[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+            String res = "";
+            foreach (String st in splitedText)
             {
                 res = res + correctedLine(st, delay);
                 res = res + '\n';
@@ -82,32 +82,34 @@ namespace SubtitleCorrector
             return res;
         }
 
-        private string correctedLine(string ln, double dl)
+        private String correctedLine(String ln, double dl)
         {
-            String[] splittedLine = line.split(" ");
-            string res = "";
-            for (int i = 0; i < splittedLine.length; i++) {
-                if (isDate(splittedLine[i])) {
-                    splittedLine[i] = fixedDate(splittedLine[i], dl);
+            String[] splittedLine = ln.Split(' ');
+            String res = "";
+            for (int i = 0; i < splittedLine.Length; i++)
+            {
+                if (IsDate(splittedLine[i]))
+                {
+                    splittedLine[i] = FixedDate(splittedLine[i], dl);
                 }
-                res = res + splittedLine[i] + (i < splittedLine.length - 1 ? " " : ""));
+                res = res + splittedLine[i] + (i < splittedLine.Length - 1 ? " " : "");
             }
             return res;
         }
 
-        private bool isDate(string dt)
+        private bool IsDate(String dt)
         {
-            string[] splitedDt = dt.split(":");
-            return (splitedDt.length == 3);
+            String[] splitedDt = dt.Split(':');
+            return (splitedDt.Length == 3);
         }
 
-        private string fixedDate(string dateSt, double dl)
+        private String FixedDate(String dateSt, double dl)
         {
-            String[] splitedDt = dateSt.split(":");
+            String[] splitedDt = dateSt.Split(':');
 
             double date = 0;
 
-            for (int i = 0; i < splitedDt.length; i++) {
+            for (int i = 0; i < splitedDt.Length; i++) {
                 date = date * 60 + Double.Parse(splitedDt[i].Replace(",", "."));
             }
 
@@ -115,27 +117,27 @@ namespace SubtitleCorrector
             if (date < 0)
                 date = 0;
 
-            for (int i = 0; i < splitedDt.length; i++) {
+            for (int i = 0; i < splitedDt.Length; i++) {
                 if (i == 0)
-                    splitedDt[i] = "" + formated((date % 60));
+                    splitedDt[i] = "" + Formated((date % 60));
                 else
-                    splitedDt[i] = "" + formated((int) (date % 60));
+                    splitedDt[i] = "" + Formated((int)(date % 60));
 
                 date /= 60;
             }
-            string res = "";
-            for (int i = splitedDt.length - 1; i >= 0; i--) {
+            String res = "";
+            for (int i = splitedDt.Length - 1; i >= 0; i--) {
                 res = res + splitedDt[i] + (i > 0 ? ":" : "");
             }
 
             return res;
         }
 
-        private formated(double date) 
+        private String Formated(double date)
         {
             String res = "";
 
-            int integerPart = (int) date;
+            int integerPart = (int)date;
 
             if (integerPart < 10)
                 res = res + "0" + integerPart;
@@ -147,11 +149,11 @@ namespace SubtitleCorrector
                 String afterThePoint = date.ToString("0.000000");
                 afterThePoint = "," + afterThePoint.Substring(2);
                 if (afterThePoint.Length > 15)
-                    afterThePoint = afterThePoint.substring(0, 4);
-                ans = ans + afterThePoint;
+                    afterThePoint = afterThePoint.Substring(0, 4);
+                res = res + afterThePoint;
             }
 
-            return ans;
+            return res;
         }
     }
 }
