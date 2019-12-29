@@ -1,12 +1,7 @@
 ﻿using System;
-using System.IO;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
-using System.Drawing;
+using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace SubtitleCorrector
@@ -18,142 +13,140 @@ namespace SubtitleCorrector
             InitializeComponent();
         }
 
+        private string _result = "";
+        private string _fileDir = "";
+
         private void button1_Click(object sender, EventArgs e)
         {
-
+            using (var sw = File.CreateText( _fileDir+ "\\generated.srt"))
+            {
+                sw.Write(_result);
+                sw.Flush();
+            }
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
-            DialogResult rs = openFileDialog1.ShowDialog();
-            if (rs == DialogResult.OK)
+            var rs = openFileDialog1.ShowDialog();
+            if (rs != DialogResult.OK) return;
+            var file = openFileDialog1.FileName;
+            try
             {
-                String file = openFileDialog1.FileName;
-                try
+                if (FileType(file).ToLower() != "srt")
                 {
-                    if (fileType(file).ToLower() != "srt")
-                    {
-                        MessageBox.Show(fileType(file));
-                        return;
-                    }
-                    String text = File.ReadAllText(file);
-                    correctFile(text, Double.Parse(textBox1.Text));
+                    MessageBox.Show(FileType(file));
+                    return;
                 }
-                catch (IOException)
-                {
-                    MessageBox.Show("Try other file");
-                }
-            }
 
+                _result = CorrectFile(File.ReadAllText(file), double.Parse(textBox1.Text));
+                _fileDir = Path.GetDirectoryName(file);
+            }
+            catch (IOException)
+            {
+                MessageBox.Show("Try other file");
+            }
         }
 
         private void openFileDialog1_FileOk(object sender, CancelEventArgs e)
         {
-
         }
 
         private void openFileDialog1_FileOk_1(object sender, CancelEventArgs e)
         {
-
         }
 
-        private String fileType(String fileName)
+        private static string FileType(string fileName)
         {
-            String res = "";
-            for (int i = fileName.Length - 1; i >= 0; i--)
-            {
+            
+            for (var i = fileName.Length - 1; i >= 0; i--)
                 if (fileName[i] == '.')
-                {
                     return fileName.Substring(i + 1);
-                }
-            }
-            return res;
+            return "";
         }
 
-        private String correctFile(String text, double delay)
+        private string CorrectFile(string text, double delay)
         {
-            String[] splitedText = text.Split(new String[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-            String res = "";
-            foreach (String st in splitedText)
+            var spitedText = text.Split(new[] {"\n", "\r\n"}, StringSplitOptions.RemoveEmptyEntries);
+            var res = "";
+            foreach (var st in spitedText)
             {
-                res = res + correctedLine(st, delay);
-                res = res + '\n';
+                res += CorrectedLine(st, delay);
+                res += '\n';
             }
+
             return res;
         }
 
-        private String correctedLine(String ln, double dl)
+        private string CorrectedLine(string ln, double dl)
         {
-            String[] splittedLine = ln.Split(' ');
-            String res = "";
-            for (int i = 0; i < splittedLine.Length; i++)
+            var spittedLine = ln.Split(' ');
+            var res = "";
+            for (var i = 0; i < spittedLine.Length; i++)
             {
-                if (IsDate(splittedLine[i]))
-                {
-                    splittedLine[i] = FixedDate(splittedLine[i], dl);
-                }
-                res = res + splittedLine[i] + (i < splittedLine.Length - 1 ? " " : "");
+                if (IsDate(spittedLine[i])) spittedLine[i] = FixedDate(spittedLine[i], dl);
+                res = res + spittedLine[i] + (i < spittedLine.Length - 1 ? " " : "");
             }
+
             return res;
         }
 
-        private bool IsDate(String dt)
+        private static bool IsDate(string dt)
         {
-            String[] splitedDt = dt.Split(':');
-            return (splitedDt.Length == 3);
+            var spitedDt = dt.Split(':');
+            return spitedDt.Length == 3;
         }
 
-        private String FixedDate(String dateSt, double dl)
+        private string FixedDate(string dateSt, double dl)
         {
-            String[] splitedDt = dateSt.Split(':');
+            var spitedDt = dateSt.Split(':');
 
-            double date = 0;
-
-            for (int i = 0; i < splitedDt.Length; i++) {
-                date = date * 60 + Double.Parse(splitedDt[i].Replace(",", "."));
-            }
+            var date = spitedDt.Aggregate<string, double>(0, (current, t) => current * 60 + double.Parse(t.Replace(",", ".")));
 
             date += dl;
             if (date < 0)
                 date = 0;
 
-            for (int i = 0; i < splitedDt.Length; i++) {
+            for (var i = 0; i < spitedDt.Length; i++)
+            {
                 if (i == 0)
-                    splitedDt[i] = "" + Formated((date % 60));
+                    spitedDt[i] = "" + Formatted(date % 60);
                 else
-                    splitedDt[i] = "" + Formated((int)(date % 60));
+                    spitedDt[i] = "" + Formatted((int) (date % 60));
 
                 date /= 60;
             }
-            String res = "";
-            for (int i = splitedDt.Length - 1; i >= 0; i--) {
-                res = res + splitedDt[i] + (i > 0 ? ":" : "");
-            }
+
+            var res = "";
+            for (var i = spitedDt.Length - 1; i >= 0; i--) res = res + spitedDt[i] + (i > 0 ? ":" : "");
 
             return res;
         }
 
-        private String Formated(double date)
+        private static string Formatted(double date)
         {
-            String res = "";
+            var res = "";
 
-            int integerPart = (int)date;
+            var integerPart = (int) date;
 
             if (integerPart < 10)
                 res = res + "0" + integerPart;
             else
-                res = res + integerPart;
+                res += integerPart;
 
-            if (integerPart != date) {
-                date -= integerPart;
-                String afterThePoint = date.ToString("0.000000");
-                afterThePoint = "," + afterThePoint.Substring(2);
-                if (afterThePoint.Length > 15)
-                    afterThePoint = afterThePoint.Substring(0, 4);
-                res = res + afterThePoint;
-            }
+            if (!(Math.Abs(integerPart - date) > 0.00001)) return res;
+            date -= integerPart;
+            var afterThePoint = date.ToString("0.000000");
+            afterThePoint = "," + afterThePoint.Substring(2);
+            if (afterThePoint.Length > 15)
+                afterThePoint = afterThePoint.Substring(0, 4);
+            res += afterThePoint;
 
             return res;
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
         }
     }
 }
